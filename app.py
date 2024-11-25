@@ -14,7 +14,6 @@ def restrictions():
 @app.route('/get_restrictions', methods=['GET'])
 def get_restrictions():
     return jsonify(RESTRICTIONS)
-
 # תנאים בסיסיים
 SHIFTS = ["בוקר", "ערב", "לילה"]
 SHIFT_HOURS = {"בוקר": (8, 17), "ערב": (15, 23), "לילה": (23, 8)}
