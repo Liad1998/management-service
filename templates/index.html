@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול משמרות</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-success"> NOC HFC מערכת לניהול משמרות</h1>
+        <div class="d-flex justify-content-center mb-3">
+            <button id="generate" class="btn btn-primary mx-2">צור מערכת משמרות</button>
+            <button id="update-restrictions" class="btn btn-warning mx-2">עדכון מגבלות</button>
+        </div>
+        <div id="schedule"></div>
+    </div>
+
+    <!-- טופס לעדכון מגבלות -->
+    <div class="modal fade" id="restrictionsModal" tabindex="-1" aria-labelledby="restrictionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restrictionsModalLabel">עדכון מגבלות לעובד</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="restrictionsForm">
+                        <div class="mb-3">
+                            <label for="employee" class="form-label">בחר עובד</label>
+                            <select id="employee" class="form-select">
+                                <option value="אדם1">אדם1</option>
+                                <option value="אדם2">אדם2</option>
+                                <option value="אדם3">אדם3</option>
+                                <option value="אדם4">אדם4</option>
+                                <option value="אדם5">אדם5</option>
+                                <option value="אדם6">אדם6</option>
+                                <option value="אדם7">אדם7</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="days" class="form-label">יום</label>
+                            <select id="days" class="form-select">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="shifts" class="form-label">משמרת</label>
+                            <select id="shifts" class="form-select">
+                                <option value="בוקר">בוקר</option>
+                                <option value="ערב">ערב</option>
+                                <option value="לילה">לילה</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success">שמור</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // הצגת לוח המשמרות
+        function renderSchedule(data) {
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = `
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>יום</th>
+                            <th>בוקר</th>
+                            <th>ערב</th>
+                            <th>לילה</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(data.schedule).map(([day, shifts]) => `
+                            <tr>
+                                <td>יום ${day}</td>
+                                <td>${shifts["בוקר"].join(', ') || '-'}</td>
+                                <td>${shifts["ערב"].join(', ') || '-'}</td>
+                                <td>${shifts["לילה"].join(', ') || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <h3>משמרות לכל עובד</h3>
+                <div>${data.shifts_table}</div>
+            `;
+        }
+
+        // בקשה ליצירת לוח משמרות
+        document.getElementById('generate').addEventListener('click', () => {
+            fetch('http://127.0.0.1:5000/generate_schedule')
+                .then(response => response.json())
+                .then(data => renderSchedule(data))
+                .catch(error => console.error('Error:', error));
+        });
+
+        // פתיחת טופס עדכון מגבלות
+        document.getElementById('update-restrictions').addEventListener('click', () => {
+            const modal = new bootstrap.Modal(document.getElementById('restrictionsModal'));
+            modal.show();
+        });
+
+        // שליחת טופס עדכון מגבלות
+        document.getElementById('restrictionsForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const employee = document.getElementById('employee').value;
+            const day = document.getElementById('days').value;
+            const shift = document.getElementById('shifts').value;
+            
+            fetch('http://127.0.0.1:5000/update_restrictions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ employee, day, shift })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // מציג הודעה על הצלחה
+                const modal = bootstrap.Modal.getInstance(document.getElementById('restrictionsModal'));
+                modal.hide(); // סגירת החלון
+            })
+            .catch(error => console.error('Error:', error)); // טיפול בשגיאה
+        });
+    </script>
+</body>
+</html>
