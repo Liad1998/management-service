@@ -34,6 +34,23 @@ const isAvailable = (employee, day, shift, schedule) => {
         return false;
     }
 
+    // Check if the employee is assigned to the previous or next shift
+    const prevShift = shift === "בוקר" ? "לילה" : shift === "ערב" ? "בוקר" : "ערב";
+    const nextShift = shift === "בוקר" ? "ערב" : shift === "ערב" ? "לילה" : "בוקר";
+
+    if ((schedule[day][prevShift] && schedule[day][prevShift].includes(employee)) || 
+        (schedule[day][nextShift] && schedule[day][nextShift].includes(employee))) {
+        return false;
+    }
+
+    // Check if the employee is assigned to the previous night's shift
+    if (day > 1) {
+        const prevDayNightShift = schedule[day - 1]?.["לילה"] || [];
+        if (shift === "בוקר" && prevDayNightShift.includes(employee)) {
+            return false;
+        }
+    }
+
     return true;
 };
 
